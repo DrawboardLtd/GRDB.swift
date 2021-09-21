@@ -16,8 +16,8 @@ private struct Item: Codable, FetchableRecord, PersistableRecord {
     var i8: Int
     var i9: Int
     
-    static func optimizedInsertStatement(_ db: Database) throws -> UpdateStatement {
-        try db.makeUpdateStatement(literal: """
+    static func optimizedInsertStatement(_ db: Database) throws -> Statement {
+        try db.makeStatement(literal: """
             INSERT INTO \(self) (
               \(CodingKeys.i0),
               \(CodingKeys.i1),
@@ -33,7 +33,7 @@ private struct Item: Codable, FetchableRecord, PersistableRecord {
             """)
     }
     
-    func insert(with statement: UpdateStatement) throws {
+    func insert(with statement: Statement) throws {
         statement.setUncheckedArguments([
             i0,
             i1,
@@ -64,7 +64,9 @@ class InsertRecordOptimizedTests: XCTestCase {
             try! FileManager.default.removeItem(atPath: databasePath)
         }
         
-        measure {
+        let options = XCTMeasureOptions()
+        options.iterationCount = 50
+        measure(options: options) {
             _ = try? FileManager.default.removeItem(atPath: databasePath)
             
             let dbQueue = try! DatabaseQueue(path: databasePath)
